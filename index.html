@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <title>ARKOS Access Portal</title>
+      <link rel="icon" type="image/png" href="./img/favicon.ico">
+    
+      <!-- Optional motion library. Page still works if CDN fails. -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    
+      <style>
+        :root {
+          --bg: #f4f3ef;
+          --paper: #fbfaf7;
+          --paper-2: #ffffff;
+          --ink: #10120f;
+          --muted: #76786f;
+          --faint: #a7a99f;
+          --line: rgba(16, 18, 15, 0.14);
+          --line-strong: rgba(16, 18, 15, 0.34);
+          --terminal: #0e130f;
+          --terminal-soft: #182018;
+          --terminal-ink: #d8dfd1;
+          --terminal-muted: #7f8b7a;
+          --accent: #4f6b4e;
+          --accent-bright: #9fb18f;
+          --danger: #8e2720;
+          --success: #315c39;
+          --shadow: 0 28px 80px rgba(20, 22, 18, 0.12);
+          --mono:
+            "SFMono-Regular",
+            "Cascadia Code",
+            "JetBrains Mono",
+            Consolas,
+            monospace;
+          --sans:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+        }
+    
+        * {
+          box-sizing: border-box;
+        }
+    
+        html,
+        body {
+          margin: 0;
+          min-height: 100%;
+          background: var(--bg);
+          color: var(--ink);
+          font-family: var(--sans);
+          overflow: hidden;
+        }
+    
+        body {
+          min-height: 100vh;
+          display: grid;
+          place-items: center;
+        }
+    
+        body::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          background:
+            linear-gradient(rgba(16, 18, 15, 0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16, 18, 15, 0.035) 1px, transparent 1px);
+          background-size: 44px 44px;
+          mask-image: radial-gradient(circle at 50% 46%, black 0%, transparent 72%);
+          pointer-events: none;
+        }
+    
+        body::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          background:
+            radial-gradient(circle at 18% 18%, rgba(90, 112, 79, 0.10), transparent 32%),
+            radial-gradient(circle at 82% 78%, rgba(16, 18, 15, 0.08), transparent 34%);
+          pointer-events: none;
+        }
+    
+        .noise {
+          position: fixed;
+          inset: 0;
+          opacity: 0.055;
+          pointer-events: none;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.65'/%3E%3C/svg%3E");
+          mix-blend-mode: multiply;
+        }
+    
+        .shell {
+          position: relative;
+          z-index: 2;
+          width: min(1120px, calc(100vw - 48px));
+          height: min(680px, calc(100vh - 48px));
+          display: grid;
+          grid-template-columns: 1.05fr 0.95fr;
+          background: var(--paper);
+          border: 1px solid rgba(16, 18, 15, 0.18);
+          box-shadow: var(--shadow);
+          overflow: hidden;
+        }
+    
+        .shell::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border: 1px solid rgba(255, 255, 255, 0.82);
+          pointer-events: none;
+        }
+    
+        .left {
+          position: relative;
+          padding: 46px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          border-right: 1px solid var(--line);
+          overflow: hidden;
+        }
+    
+        .left::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(120deg, rgba(255,255,255,0.65), transparent 42%),
+            radial-gradient(circle at 25% 22%, rgba(79, 107, 78, 0.10), transparent 36%);
+          pointer-events: none;
+        }
+    
+        .brand {
+          position: relative;
+          z-index: 1;
+        }
+    
+        .eyebrow {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--mono);
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+    
+        .eyebrow::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          background: var(--accent);
+          border-radius: 50%;
+          box-shadow: 0 0 18px rgba(79, 107, 78, 0.54);
+        }
+    
+        h1 {
+          margin: 28px 0 0;
+          font-size: clamp(58px, 8vw, 104px);
+          line-height: 0.86;
+          letter-spacing: -0.075em;
+          font-weight: 650;
+        }
+    
+        .descriptor {
+          width: min(420px, 100%);
+          margin-top: 28px;
+          color: var(--muted);
+          font-size: 15px;
+          line-height: 1.7;
+          text-wrap: pretty;
+        }
+    
+        .system-strip {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+        }
+    
+        .metric {
+          border-top: 1px solid var(--line);
+          padding-top: 14px;
+        }
+    
+        .metric-label {
+          font-family: var(--mono);
+          font-size: 10px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--faint);
+        }
+    
+        .metric-value {
+          margin-top: 8px;
+          font-family: var(--mono);
+          font-size: 13px;
+          color: var(--ink);
+        }
+    
+        .right {
+          position: relative;
+          padding: 46px;
+          display: grid;
+          align-items: center;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.72), rgba(244,243,239,0.94));
+        }
+    
+        .access-card {
+          position: relative;
+          width: 100%;
+          max-width: 430px;
+          margin: 0 auto;
+        }
+    
+        .terminal-frame {
+          background: var(--terminal);
+          color: var(--terminal-ink);
+          border: 1px solid rgba(16, 18, 15, 0.44);
+          box-shadow:
+            0 20px 58px rgba(16, 18, 15, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          overflow: hidden;
+        }
+    
+        .terminal-top {
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 14px;
+          border-bottom: 1px solid rgba(216, 223, 209, 0.10);
+          background: rgba(255, 255, 255, 0.035);
+        }
+    
+        .dots {
+          display: flex;
+          gap: 7px;
+        }
+    
+        .dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: rgba(216, 223, 209, 0.35);
+        }
+    
+        .terminal-title {
+          font-family: var(--mono);
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--terminal-muted);
+        }
+    
+        .terminal-body {
+          min-height: 358px;
+          padding: 26px;
+          position: relative;
+        }
+    
+        .scanline {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: -80px;
+          height: 80px;
+          background: linear-gradient(
+            180deg,
+            transparent,
+            rgba(159, 177, 143, 0.09),
+            transparent
+          );
+          pointer-events: none;
+          animation: scan 6s linear infinite;
+        }
+    
+        @keyframes scan {
+          from { transform: translateY(0); }
+          to { transform: translateY(520px); }
+        }
+    
+        .dialogue {
+          position: absolute;
+          inset: 26px;
+          opacity: 0;
+          transform: translateY(14px);
+          pointer-events: none;
+        }
+    
+        .dialogue.active {
+          opacity: 1;
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+    
+        .dialogue-kicker {
+          font-family: var(--mono);
+          font-size: 11px;
+          color: var(--accent-bright);
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          margin-bottom: 18px;
+        }
+    
+        .dialogue h2 {
+          margin: 0 0 10px;
+          font-size: 22px;
+          line-height: 1.15;
+          font-weight: 520;
+          letter-spacing: -0.025em;
+          color: #f1f5ed;
+        }
+    
+        .dialogue-copy {
+          margin: 0 0 28px;
+          color: var(--terminal-muted);
+          font-size: 13px;
+          line-height: 1.65;
+        }
+    
+        .field-group {
+          position: relative;
+        }
+    
+        label {
+          display: block;
+          margin-bottom: 10px;
+          font-family: var(--mono);
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--terminal-muted);
+        }
+    
+        input {
+          width: 100%;
+          height: 48px;
+          border: 1px solid rgba(216, 223, 209, 0.16);
+          border-radius: 0;
+          background: rgba(255, 255, 255, 0.045);
+          color: #f4f7ef;
+          font-family: var(--mono);
+          font-size: 15px;
+          padding: 0 14px;
+          outline: none;
+          transition:
+            border-color 180ms ease,
+            background 180ms ease,
+            box-shadow 180ms ease;
+        }
+    
+        input:focus {
+          border-color: rgba(159, 177, 143, 0.7);
+          background: rgba(255, 255, 255, 0.065);
+          box-shadow:
+            0 0 0 1px rgba(159, 177, 143, 0.32),
+            0 0 28px rgba(159, 177, 143, 0.12);
+        }
+    
+        .button-row {
+          display: flex;
+          gap: 10px;
+          margin-top: 16px;
+        }
+    
+        button {
+          min-height: 46px;
+          border-radius: 0;
+          border: 1px solid rgba(159, 177, 143, 0.55);
+          background: rgba(159, 177, 143, 0.12);
+          color: #eef4e8;
+          font-family: var(--mono);
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          cursor: pointer;
+          padding: 0 16px;
+          transition:
+            background 180ms ease,
+            border-color 180ms ease,
+            transform 180ms ease;
+        }
+    
+        button.primary {
+          flex: 1;
+        }
+    
+        button:hover {
+          background: rgba(159, 177, 143, 0.20);
+          border-color: rgba(159, 177, 143, 0.88);
+        }
+    
+        button:active {
+          transform: translateY(1px);
+        }
+    
+        button:focus-visible {
+          outline: 2px solid rgba(159, 177, 143, 0.9);
+          outline-offset: 3px;
+        }
+    
+        .ghost-button {
+          border-color: rgba(216, 223, 209, 0.18);
+          color: var(--terminal-muted);
+          background: transparent;
+        }
+    
+        .status {
+          min-height: 18px;
+          margin-top: 15px;
+          font-family: var(--mono);
+          font-size: 11px;
+          color: var(--terminal-muted);
+          letter-spacing: 0.02em;
+        }
+    
+        .status.error {
+          color: #e59a8f;
+        }
+    
+        .status.success {
+          color: #bad3a7;
+        }
+    
+        .log {
+          margin-top: 24px;
+          padding-top: 18px;
+          border-top: 1px solid rgba(216, 223, 209, 0.10);
+          font-family: var(--mono);
+          font-size: 11px;
+          line-height: 1.75;
+          color: var(--terminal-muted);
+          min-height: 74px;
+        }
+    
+        .log-line {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+    
+        .log-line.visible {
+          opacity: 1;
+          transform: translateY(0);
+          transition:
+            opacity 260ms ease,
+            transform 260ms ease;
+        }
+    
+        .log-line::before {
+          content: "> ";
+          color: var(--accent-bright);
+        }
+    
+        .access-glyph {
+          width: 74px;
+          height: 74px;
+          border: 1px solid rgba(159, 177, 143, 0.48);
+          display: grid;
+          place-items: center;
+          margin-bottom: 26px;
+          position: relative;
+        }
+    
+        .access-glyph::before,
+        .access-glyph::after {
+          content: "";
+          position: absolute;
+          border: 1px solid rgba(159, 177, 143, 0.24);
+        }
+    
+        .access-glyph::before {
+          inset: 8px;
+        }
+    
+        .access-glyph::after {
+          inset: 18px;
+          background: rgba(159, 177, 143, 0.08);
+        }
+    
+        .access-glyph span {
+          position: relative;
+          z-index: 1;
+          width: 8px;
+          height: 8px;
+          background: var(--accent-bright);
+          box-shadow: 0 0 22px rgba(159, 177, 143, 0.88);
+        }
+    
+        .mini-map {
+          position: absolute;
+          right: 46px;
+          top: 46px;
+          display: grid;
+          grid-template-columns: repeat(4, 9px);
+          gap: 5px;
+          opacity: 0.55;
+        }
+    
+        .mini-map span {
+          width: 9px;
+          height: 9px;
+          border: 1px solid rgba(16, 18, 15, 0.24);
+        }
+    
+        .mini-map span:nth-child(3),
+        .mini-map span:nth-child(6),
+        .mini-map span:nth-child(12) {
+          background: rgba(79, 107, 78, 0.38);
+          border-color: rgba(79, 107, 78, 0.5);
+        }
+    
+        .footer-code {
+          position: absolute;
+          left: 46px;
+          bottom: 34px;
+          font-family: var(--mono);
+          font-size: 10px;
+          letter-spacing: 0.12em;
+          color: var(--faint);
+          text-transform: uppercase;
+        }
+    
+        .route-cover {
+          position: fixed;
+          z-index: 20;
+          inset: 0;
+          background: var(--terminal);
+          transform: scaleY(0);
+          transform-origin: bottom;
+          display: grid;
+          place-items: center;
+          color: var(--terminal-ink);
+          font-family: var(--mono);
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          font-size: 11px;
+          pointer-events: none;
+        }
+    
+        .route-cover span {
+          opacity: 0;
+        }
+    
+        @media (max-width: 860px) {
+          html,
+          body {
+            overflow: auto;
+          }
+    
+          body {
+            min-height: 100svh;
+            padding: 24px 0;
+          }
+    
+          .shell {
+            height: auto;
+            min-height: calc(100svh - 48px);
+            grid-template-columns: 1fr;
+          }
+    
+          .left {
+            min-height: 320px;
+            border-right: 0;
+            border-bottom: 1px solid var(--line);
+          }
+    
+          .right {
+            padding: 32px;
+          }
+    
+          .terminal-body {
+            min-height: 380px;
+          }
+    
+          .footer-code,
+          .mini-map {
+            display: none;
+          }
+        }
+    
+        @media (max-width: 520px) {
+          .shell {
+            width: calc(100vw - 24px);
+          }
+    
+          .left,
+          .right {
+            padding: 28px;
+          }
+    
+          .system-strip {
+            grid-template-columns: 1fr;
+          }
+    
+          .dialogue {
+            inset: 22px;
+          }
+    
+          .terminal-body {
+            padding: 22px;
+          }
+    
+          .button-row {
+            flex-direction: column;
+          }
+        }
+    
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation: none !important;
+            transition: none !important;
+            scroll-behavior: auto !important;
+          }
+        }
+      </style>
+    </head>
+    
+    <body>
+      <div class="noise"></div>
+    
+      <main class="shell" id="shell">
+        <section class="left" aria-label="ARKOS identity panel">
+          <div class="brand">
+            <div class="eyebrow">Internal access node</div>
+    
+            <h1>ARKOS</h1>
+    
+            <p class="descriptor">
+              Administrative systems interface. Authentication required before
+              routing into the local ARKOS environment.
+            </p>
+          </div>
+    
+          <div class="system-strip" aria-label="System status">
+            <div class="metric">
+              <div class="metric-label">Node</div>
+              <div class="metric-value">LOCAL / 01</div>
+            </div>
+    
+            <div class="metric">
+              <div class="metric-label">Protocol</div>
+              <div class="metric-value">ARKOS-AUTH</div>
+            </div>
+    
+            <div class="metric">
+              <div class="metric-label">State</div>
+              <div class="metric-value" id="stateMetric">LOCKED</div>
+            </div>
+          </div>
+        </section>
+    
+        <section class="right" aria-label="Login panel">
+          <div class="mini-map" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+    
+          <div class="access-card">
+            <div class="terminal-frame">
+              <div class="terminal-top">
+                <div class="dots" aria-hidden="true">
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+    
+                <div class="terminal-title">ARKOS SECURE SESSION</div>
+              </div>
+    
+              <div class="terminal-body">
+                <div class="scanline"></div>
+    
+                <form class="dialogue active" id="usernameDialogue" autocomplete="off">
+                  <div class="dialogue-kicker">Sequence 01 / Identity</div>
+    
+                  <h2>Identify operator.</h2>
+    
+                  <p class="dialogue-copy">
+                    Enter a registered username to initialize the access challenge.
+                  </p>
+    
+                  <div class="field-group">
+                    <label for="username">Username</label>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      autocomplete="username"
+                      spellcheck="false"
+                      autofocus
+                    />
+                  </div>
+    
+                  <div class="button-row">
+                    <button class="primary" type="submit">Continue</button>
+                  </div>
+    
+                  <div class="status" id="usernameStatus" aria-live="polite"></div>
+    
+                  <div class="log" id="usernameLog" aria-hidden="true">
+                    <div class="log-line visible">session opened</div>
+                    <div class="log-line visible">waiting for operator identity</div>
+                  </div>
+                </form>
+    
+                <form class="dialogue" id="passwordDialogue" autocomplete="off">
+                  <div class="dialogue-kicker">Sequence 02 / Credential</div>
+    
+                  <h2>Credential required.</h2>
+    
+                  <p class="dialogue-copy">
+                    Identity accepted. Submit the current administrative password.
+                  </p>
+    
+                  <div class="field-group">
+                    <label for="password">Password</label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autocomplete="current-password"
+                    />
+                  </div>
+    
+                  <div class="button-row">
+                    <button class="primary" type="submit">Enter System</button>
+                    <button class="ghost-button" type="button" id="backButton">Back</button>
+                  </div>
+    
+                  <div class="status" id="passwordStatus" aria-live="polite"></div>
+    
+                  <div class="log" id="passwordLog" aria-hidden="true">
+                    <div class="log-line visible">operator verified</div>
+                    <div class="log-line visible">credential challenge issued</div>
+                  </div>
+                </form>
+    
+                <section class="dialogue" id="grantedDialogue" aria-label="Access granted">
+                  <div class="access-glyph" aria-hidden="true">
+                    <span></span>
+                  </div>
+    
+                  <div class="dialogue-kicker">Sequence 03 / Access</div>
+    
+                  <h2>Access granted.</h2>
+    
+                  <p class="dialogue-copy">
+                    Routing authenticated session into ARKOS home interface.
+                  </p>
+    
+                  <div class="log" aria-hidden="true">
+                    <div class="log-line visible">credential accepted</div>
+                    <div class="log-line visible">session token issued</div>
+                    <div class="log-line visible">redirecting to /home/index.html</div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+    
+          <div class="footer-code">
+            ARKOS // INTERNAL AUTHENTICATION SURFACE
+          </div>
+        </section>
+      </main>
+    
+      <div class="route-cover" id="routeCover">
+        <span>Entering ARKOS</span>
+      </div>
+    
+      <script>
+        const VALID_USERNAME = "architect";
+        const VALID_PASSWORD = "adminpass";
+        const REDIRECT_PATH = "home/index.html";
+    
+        const hasAnime = typeof window.anime === "function";
+    
+        const shell = document.getElementById("shell");
+        const routeCover = document.getElementById("routeCover");
+    
+        const usernameDialogue = document.getElementById("usernameDialogue");
+        const passwordDialogue = document.getElementById("passwordDialogue");
+        const grantedDialogue = document.getElementById("grantedDialogue");
+    
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+    
+        const usernameStatus = document.getElementById("usernameStatus");
+        const passwordStatus = document.getElementById("passwordStatus");
+    
+        const usernameLog = document.getElementById("usernameLog");
+        const passwordLog = document.getElementById("passwordLog");
+    
+        const backButton = document.getElementById("backButton");
+        const stateMetric = document.getElementById("stateMetric");
+    
+        let acceptedUsername = "";
+    
+        function showStatus(element, message, type) {
+          element.textContent = message;
+          element.className = "status";
+    
+          if (type) {
+            element.classList.add(type);
+          }
+        }
+    
+        function addLog(target, message) {
+          const line = document.createElement("div");
+          line.className = "log-line";
+          line.textContent = message;
+          target.appendChild(line);
+    
+          requestAnimationFrame(() => {
+            line.classList.add("visible");
+          });
+        }
+    
+        function setActive(next) {
+          [usernameDialogue, passwordDialogue, grantedDialogue].forEach((dialogue) => {
+            dialogue.classList.remove("active");
+            dialogue.style.pointerEvents = "none";
+          });
+    
+          next.classList.add("active");
+          next.style.pointerEvents = "auto";
+        }
+    
+        function transitionTo(current, next, callback) {
+          if (!hasAnime) {
+            setActive(next);
+            if (callback) callback();
+            return;
+          }
+    
+          current.style.pointerEvents = "none";
+    
+          anime({
+            targets: current,
+            opacity: [1, 0],
+            translateY: [0, -10],
+            duration: 260,
+            easing: "easeInOutQuad",
+            complete: () => {
+              current.classList.remove("active");
+    
+              next.classList.add("active");
+              next.style.opacity = 0;
+              next.style.transform = "translateY(14px)";
+              next.style.pointerEvents = "auto";
+    
+              anime({
+                targets: next,
+                opacity: [0, 1],
+                translateY: [14, 0],
+                duration: 460,
+                easing: "easeOutExpo",
+                complete: () => {
+                  if (callback) callback();
+                }
+              });
+            }
+          });
+        }
+    
+        function shake(element) {
+          if (!hasAnime) return;
+    
+          anime({
+            targets: element,
+            translateX: [0, -8, 8, -5, 5, 0],
+            duration: 360,
+            easing: "easeInOutSine"
+          });
+        }
+    
+        function bootIntro() {
+          if (!hasAnime) return;
+    
+          anime.timeline({
+            easing: "easeOutExpo"
+          })
+          .add({
+            targets: ".shell",
+            opacity: [0, 1],
+            translateY: [18, 0],
+            scale: [0.985, 1],
+            duration: 800
+          })
+          .add({
+            targets: ".brand > *, .system-strip .metric, .access-card",
+            opacity: [0, 1],
+            translateY: [12, 0],
+            delay: anime.stagger(70),
+            duration: 620
+          }, "-=460")
+          .add({
+            targets: ".mini-map span",
+            opacity: [0, 1],
+            scale: [0.6, 1],
+            delay: anime.stagger(24),
+            duration: 340
+          }, "-=480");
+        }
+    
+        function completeRoute() {
+          stateMetric.textContent = "GRANTED";
+    
+          if (!hasAnime) {
+            window.location.href = REDIRECT_PATH;
+            return;
+          }
+    
+          anime.timeline({
+            easing: "easeInOutExpo"
+          })
+          .add({
+            targets: shell,
+            opacity: [1, 0.18],
+            scale: [1, 0.985],
+            duration: 520
+          })
+          .add({
+            targets: routeCover,
+            scaleY: [0, 1],
+            duration: 680
+          }, "-=420")
+          .add({
+            targets: "#routeCover span",
+            opacity: [0, 1],
+            translateY: [8, 0],
+            duration: 320
+          }, "-=180")
+          .add({
+            targets: "#routeCover span",
+            opacity: [1, 0],
+            duration: 260,
+            delay: 260,
+            complete: () => {
+              window.location.href = REDIRECT_PATH;
+            }
+          });
+        }
+    
+        usernameDialogue.addEventListener("submit", (event) => {
+          event.preventDefault();
+    
+          const username = usernameInput.value.trim();
+    
+          if (!username) {
+            showStatus(usernameStatus, "username required", "error");
+            addLog(usernameLog, "identity field returned empty");
+            shake(usernameDialogue);
+            usernameInput.focus();
+            return;
+          }
+    
+          if (username !== VALID_USERNAME) {
+            showStatus(usernameStatus, "user not recognized", "error");
+            addLog(usernameLog, "identity rejected");
+            shake(usernameDialogue);
+            usernameInput.select();
+            return;
+          }
+    
+          acceptedUsername = username;
+          stateMetric.textContent = "VERIFYING";
+          showStatus(usernameStatus, "identity accepted", "success");
+          addLog(usernameLog, "operator profile matched");
+    
+          window.setTimeout(() => {
+            transitionTo(usernameDialogue, passwordDialogue, () => {
+              passwordInput.focus();
+            });
+          }, 420);
+        });
+    
+        passwordDialogue.addEventListener("submit", (event) => {
+          event.preventDefault();
+    
+          const password = passwordInput.value;
+    
+          if (!password) {
+            showStatus(passwordStatus, "password required", "error");
+            addLog(passwordLog, "credential field returned empty");
+            shake(passwordDialogue);
+            passwordInput.focus();
+            return;
+          }
+    
+          if (acceptedUsername !== VALID_USERNAME || password !== VALID_PASSWORD) {
+            showStatus(passwordStatus, "access denied", "error");
+            addLog(passwordLog, "credential rejected");
+            stateMetric.textContent = "LOCKED";
+            shake(passwordDialogue);
+            passwordInput.select();
+            return;
+          }
+    
+          showStatus(passwordStatus, "access granted", "success");
+          addLog(passwordLog, "credential accepted");
+          stateMetric.textContent = "ROUTING";
+    
+          window.setTimeout(() => {
+            transitionTo(passwordDialogue, grantedDialogue, () => {
+              window.setTimeout(completeRoute, 1100);
+            });
+          }, 420);
+        });
+    
+        backButton.addEventListener("click", () => {
+          passwordInput.value = "";
+          passwordStatus.textContent = "";
+          stateMetric.textContent = "LOCKED";
+    
+          transitionTo(passwordDialogue, usernameDialogue, () => {
+            usernameInput.focus();
+          });
+        });
+    
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && passwordDialogue.classList.contains("active")) {
+            backButton.click();
+          }
+        });
+    
+        bootIntro();
+      </script>
+    </body>
+    </html>
